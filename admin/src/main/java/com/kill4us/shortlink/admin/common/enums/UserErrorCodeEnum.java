@@ -4,8 +4,10 @@ import com.kill4us.shortlink.admin.common.convention.errorcode.IErrorCode;
 
 public enum UserErrorCodeEnum implements IErrorCode {
 
-    USER_NOT_EXISTS("B000200", "用户查询不存在"),
-    USER_EXISTS("B000201", "用户已存在");
+    USER_NOT_EXISTS("B000200", "用户记录不存在"),
+    USER_NAME_EXISTS("B000201", "用户名已存在"),
+    USER_EXISTS("B000202", "用户记录已存在"),
+    USER_SAVE_ERROR("B000203", "用户保存失败");
 
     private final String code;
 
