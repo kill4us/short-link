@@ -1,14 +1,15 @@
 package com.kill4us.shortlink.admin.dto.resp;
 
+
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.kill4us.shortlink.admin.common.serialize.PhoneDesensitizationSerializer;
 import lombok.Data;
 
 /**
- * 用户返回参数相响应
+ * 用户阵势参数响应
  */
 @Data
-public class UserRespDTO {
+public class UserActualRespDTO {
 
     /**
      * id
@@ -28,7 +29,6 @@ public class UserRespDTO {
     /**
      * 手机号
      */
-    @JsonSerialize(using = PhoneDesensitizationSerializer.class)
     private String phone;
 
     /**
@@ -36,3 +36,4 @@ public class UserRespDTO {
      */
     private String mail;
 }
+

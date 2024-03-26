@@ -1,7 +1,10 @@
 package com.kill4us.shortlink.admin.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.kill4us.shortlink.admin.common.convention.result.Result;
+import com.kill4us.shortlink.admin.common.convention.result.Results;
 import com.kill4us.shortlink.admin.common.enums.UserErrorCodeEnum;
+import com.kill4us.shortlink.admin.dto.resp.UserActualRespDTO;
 import com.kill4us.shortlink.admin.dto.resp.UserRespDTO;
 import com.kill4us.shortlink.admin.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +27,14 @@ public class UserController {
      */
     @GetMapping("/api/shortlink/v1/user/{username}")
     public Result<UserRespDTO> getUserByUsername(@PathVariable("username") String username) {
-        UserRespDTO result = userService.getUserByUsername(username);
-        if (result == null) {
-            return new Result<UserRespDTO>().setCode(UserErrorCodeEnum.USER_NOT_EXISTS.code()).setMessage(UserErrorCodeEnum.USER_NOT_EXISTS.message());
+        return Results.success(userService.getUserByUsername(username));
+    }
 
-        } else {
-            return new Result<UserRespDTO>().setCode("0").setData(result);
-        }
+    /**
+     * 根据用户名查询用户未脱敏信息
+     */
+    @GetMapping("/api/shortlink/v1/actual/user/{username}")
+    public Result<UserActualRespDTO> getActualUserByUsername(@PathVariable("username") String username) {
+        return Results.success(BeanUtil.toBean(userService.getUserByUsername(username), UserActualRespDTO.class));
     }
 }
