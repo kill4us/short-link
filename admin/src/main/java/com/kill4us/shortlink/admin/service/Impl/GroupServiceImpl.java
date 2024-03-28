@@ -1,10 +1,13 @@
 package com.kill4us.shortlink.admin.service.Impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kill4us.shortlink.admin.dao.entity.GroupDO;
 import com.kill4us.shortlink.admin.dao.mapper.GroupMapper;
 import com.kill4us.shortlink.admin.service.GroupService;
+import com.kill4us.shortlink.admin.utils.RandomGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -15,8 +18,37 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
 
+    /**
+     * 新增短链接分组
+     * @param groupName 分组名
+     */
     @Override
-    public void save(String groupName) {
+    public void saveGroup(String groupName) {
+        String gid;
+        while (true) {
+            gid = RandomGenerator.generateRandom();
+            if (hasGid(gid)) {
+                break;
+            }
+        }
+        GroupDO groupDO = GroupDO.builder()
+                .name(groupName)
+                .gid(gid)
+                .build();
+        baseMapper.insert(groupDO);
+    }
 
+    /**
+     * 检查gid是否可用
+     * @param gid
+     * @return 可用返回true
+     */
+    private boolean hasGid(String gid) {
+        LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                .eq(GroupDO::getGid, gid)
+                //  TODO 通过网关传递用户名
+                .eq(GroupDO::getUsername, null);
+        GroupDO hasGroup = baseMapper.selectOne(queryWrapper);
+        return hasGroup == null;
     }
 }

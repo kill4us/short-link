@@ -8,5 +8,9 @@ import com.kill4us.shortlink.admin.dao.entity.GroupDO;
  */
 public interface GroupService extends IService<GroupDO> {
 
-    void save(String groupName);
+    /**
+     * 新增短链接分组
+     * @param groupName 分组名
+     */
+    void saveGroup(String groupName);
 }
