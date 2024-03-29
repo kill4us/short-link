@@ -3,6 +3,7 @@ package com.kill4us.shortlink.admin.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.kill4us.shortlink.admin.dao.entity.GroupDO;
 import com.kill4us.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
+import com.kill4us.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import com.kill4us.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import com.kill4us.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
 
@@ -31,5 +32,11 @@ public interface GroupService extends IService<GroupDO> {
      */
     void updateGroup(ShortLinkGroupUpdateReqDTO requestParam);
 
+    /**
+     * 删除短链接分组
+     * @param gid 分组ID
+     */
     void deleteGroup(String gid);
+
+    void sortGroup(List<ShortLinkGroupSortReqDTO> requestParam);
 }

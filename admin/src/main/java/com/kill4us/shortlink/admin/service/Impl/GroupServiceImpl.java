@@ -11,6 +11,7 @@ import com.kill4us.shortlink.admin.common.biz.user.UserContext;
 import com.kill4us.shortlink.admin.dao.entity.GroupDO;
 import com.kill4us.shortlink.admin.dao.mapper.GroupMapper;
 import com.kill4us.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
+import com.kill4us.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import com.kill4us.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import com.kill4us.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
 import com.kill4us.shortlink.admin.service.GroupService;
@@ -78,6 +79,10 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         return BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
     }
 
+    /**
+     * 修改短链接分组名
+     * @param requestParam 分组名
+     */
     @Override
     public void updateGroup(ShortLinkGroupUpdateReqDTO requestParam) {
         LambdaUpdateWrapper<GroupDO> updateWrapper = Wrappers.lambdaUpdate(GroupDO.class)
@@ -89,6 +94,10 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         baseMapper.update(groupDO, updateWrapper);
     }
 
+    /**
+     * 删除短链接分组
+     * @param gid 分组ID
+     */
     @Override
     public void deleteGroup(String gid) {
         LambdaUpdateWrapper<GroupDO> deleteWrapper = Wrappers.lambdaUpdate(GroupDO.class)
@@ -98,5 +107,19 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         GroupDO groupDO = new GroupDO();
         groupDO.setDelFlag(1);
         baseMapper.update(groupDO, deleteWrapper);
+    }
+
+    @Override
+    public void sortGroup(List<ShortLinkGroupSortReqDTO> requestParam) {
+        requestParam.forEach(each -> {
+            GroupDO groupDO = GroupDO.builder()
+                    .sortOrder(each.getSortOrder())
+                    .build();
+            LambdaUpdateWrapper<GroupDO> updateWrapper = Wrappers.lambdaUpdate(GroupDO.class)
+                    .eq(GroupDO::getUsername, UserContext.getUsername())
+                    .eq(GroupDO::getDelFlag, 0)
+                    .eq(GroupDO::getGid, each.getGid());
+            baseMapper.update(groupDO, updateWrapper);
+        });
     }
 }
