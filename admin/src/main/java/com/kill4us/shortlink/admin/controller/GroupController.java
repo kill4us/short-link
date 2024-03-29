@@ -42,4 +42,10 @@ public class GroupController {
         return Results.success();
     }
 
+    @DeleteMapping("/api/short-link/v1/group")
+    public Result<Void> updateGroup(@RequestParam String gid) {
+        groupService.deleteGroup(gid);
+        return Results.success();
+    }
+
 }
