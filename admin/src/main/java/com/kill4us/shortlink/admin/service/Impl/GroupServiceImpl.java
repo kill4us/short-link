@@ -1,15 +1,22 @@
 package com.kill4us.shortlink.admin.service.Impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.BeanUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kill4us.shortlink.admin.dao.entity.GroupDO;
 import com.kill4us.shortlink.admin.dao.mapper.GroupMapper;
+import com.kill4us.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
+import com.kill4us.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
 import com.kill4us.shortlink.admin.service.GroupService;
 import com.kill4us.shortlink.admin.utils.RandomGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 短链接分组接口实现层
@@ -33,6 +40,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         }
         GroupDO groupDO = GroupDO.builder()
                 .name(groupName)
+                .sortOrder(0)
                 .gid(gid)
                 .build();
         baseMapper.insert(groupDO);
@@ -50,5 +58,15 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                 .eq(GroupDO::getUsername, null);
         GroupDO hasGroup = baseMapper.selectOne(queryWrapper);
         return hasGroup == null;
+    }
+
+    @Override
+    public List<ShortLinkGroupRespDTO> listGroup() {
+        LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                .eq(GroupDO::getDelFlag, 0)
+                .orderByDesc(GroupDO::getSortOrder, GroupDO::getUpdateTime)
+                .isNull(GroupDO::getUsername);
+        List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
+        return BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
     }
 }
