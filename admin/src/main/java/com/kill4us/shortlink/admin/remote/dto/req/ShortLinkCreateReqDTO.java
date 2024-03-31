@@ -1,4 +1,4 @@
-package com.kill4us.shortlink.project.dto.req;
+package com.kill4us.shortlink.admin.remote.dto.req;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

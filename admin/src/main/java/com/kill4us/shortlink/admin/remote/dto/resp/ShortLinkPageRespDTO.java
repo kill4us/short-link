@@ -1,8 +1,7 @@
-package com.kill4us.shortlink.project.dto.resp;
+package com.kill4us.shortlink.admin.remote.dto.resp;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
