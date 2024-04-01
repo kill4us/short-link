@@ -8,20 +8,26 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kill4us.shortlink.admin.common.biz.user.UserContext;
+import com.kill4us.shortlink.admin.common.convention.result.Result;
 import com.kill4us.shortlink.admin.dao.entity.GroupDO;
 import com.kill4us.shortlink.admin.dao.mapper.GroupMapper;
 import com.kill4us.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
 import com.kill4us.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import com.kill4us.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import com.kill4us.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
+import com.kill4us.shortlink.admin.remote.ShortLinkRemoteService;
+import com.kill4us.shortlink.admin.remote.dto.resp.ShortLinkCountQueryRespDTO;
 import com.kill4us.shortlink.admin.service.GroupService;
 import com.kill4us.shortlink.admin.utils.RandomGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.swing.text.html.Option;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * 短链接分组接口实现层
@@ -29,6 +35,9 @@ import java.util.List;
 @Service
 @Slf4j
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
+
+    ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
+    };
 
     /**
      * 新增短链接分组
@@ -76,7 +85,16 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                 .orderByDesc(GroupDO::getSortOrder, GroupDO::getUpdateTime)
                 .eq(GroupDO::getUsername, UserContext.getUsername());
         List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
-        return BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
+        Result<List<ShortLinkCountQueryRespDTO>> listResult =
+                shortLinkRemoteService.listGroupShortLinkCount(groupDOList.stream().map(GroupDO::getGid).toList());
+        List<ShortLinkGroupRespDTO> shortLinkGroupRespDTOList = BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
+        shortLinkGroupRespDTOList.forEach(each -> {
+            Optional<ShortLinkCountQueryRespDTO> first = listResult.getData().stream()
+                    .filter(item -> Objects.equals(item.getGid(), each.getGid()))
+                    .findFirst();
+            first.ifPresent(item -> each.setShortLinkCount(first.get().getShortLinkCount()));
+        });
+        return shortLinkGroupRespDTOList;
     }
 
     /**
