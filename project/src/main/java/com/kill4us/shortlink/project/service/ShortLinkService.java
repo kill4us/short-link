@@ -5,8 +5,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.kill4us.shortlink.project.dao.entity.ShortLinkDO;
 import com.kill4us.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.kill4us.shortlink.project.dto.req.ShortLinkPageReqDTO;
+import com.kill4us.shortlink.project.dto.resp.ShortLinkCountQueryRespDTO;
 import com.kill4us.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.kill4us.shortlink.project.dto.resp.ShortLinkPageRespDTO;
+
+import java.util.List;
 
 /**
  * 短链接接口层
@@ -26,4 +29,6 @@ public interface ShortLinkService extends IService<ShortLinkDO> {
      * @return 分页结果
      */
     IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam);
+
+    List<ShortLinkCountQueryRespDTO> listGroupShortLinkCount(List<String> requestParam);
 }

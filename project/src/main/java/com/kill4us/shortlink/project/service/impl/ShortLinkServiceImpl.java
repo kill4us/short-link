@@ -2,6 +2,7 @@ package com.kill4us.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -10,6 +11,7 @@ import com.kill4us.shortlink.project.dao.entity.ShortLinkDO;
 import com.kill4us.shortlink.project.dao.mapper.ShortLinkMapper;
 import com.kill4us.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.kill4us.shortlink.project.dto.req.ShortLinkPageReqDTO;
+import com.kill4us.shortlink.project.dto.resp.ShortLinkCountQueryRespDTO;
 import com.kill4us.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.kill4us.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import com.kill4us.shortlink.project.service.ShortLinkService;
@@ -19,6 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * 短链接接口实现层
@@ -30,6 +35,11 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     private final RBloomFilter<String> shortLinkCreateCachePenetrationBloomFilter;
 
+    /**
+     * 短链接创建
+     * @param requestParam 创建短链接请求参数
+     * @return 短链接返回实体
+     */
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
         String shortLinkSuffix = generateSuffix(requestParam);
@@ -75,6 +85,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         return shortUri;
     }
 
+    /**
+     * 短链接分页查询
+     * @param requestParam 分页查询短链接请求参数
+     */
     @Override
     public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
         LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
@@ -83,5 +97,15 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .eq(ShortLinkDO::getDelFlag, 0);
         IPage<ShortLinkDO> resultPage = baseMapper.selectPage(requestParam, queryWrapper);
         return resultPage.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
+    }
+
+    @Override
+    public List<ShortLinkCountQueryRespDTO> listGroupShortLinkCount(List<String> requestParam) {
+        QueryWrapper<ShortLinkDO> queryWrapper = Wrappers.query(new ShortLinkDO()).select("gid, count(*) as shortLinkCount")
+                .in("gid", requestParam)
+                .eq("enable_status", 0)
+                .groupBy("gid");
+        List<Map<String, Object>> shortLinkDOS = baseMapper.selectMaps(queryWrapper);
+        return BeanUtil.copyToList(shortLinkDOS, ShortLinkCountQueryRespDTO.class);
     }
 }
