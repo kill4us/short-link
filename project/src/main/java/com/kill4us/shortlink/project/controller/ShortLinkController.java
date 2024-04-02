@@ -1,14 +1,19 @@
 package com.kill4us.shortlink.project.controller;
 
+import cn.hutool.http.server.HttpServerRequest;
+import cn.hutool.http.server.HttpServerResponse;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.kill4us.shortlink.project.common.convention.result.Result;
 import com.kill4us.shortlink.project.common.convention.result.Results;
 import com.kill4us.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.kill4us.shortlink.project.dto.req.ShortLinkPageReqDTO;
+import com.kill4us.shortlink.project.dto.req.ShortLinkUpdateReqDTO;
 import com.kill4us.shortlink.project.dto.resp.ShortLinkCountQueryRespDTO;
 import com.kill4us.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.kill4us.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import com.kill4us.shortlink.project.service.ShortLinkService;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,12 +28,23 @@ public class ShortLinkController {
 
     private final ShortLinkService shortLinkService;
 
+    @GetMapping("/{short-uri}")
+    private void restoreUrl(@PathVariable("short-uri") String short_uri, ServletRequest request, ServletResponse response) {
+        shortLinkService.restoreUrl(short_uri, request, response);
+    }
+
     /**
      * 创建短链接
      */
     @PostMapping("/api/short-link/v1/create")
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO requestParam) {
         return Results.success(shortLinkService.createShortLink(requestParam));
+    }
+
+    @PutMapping("/api/short-link/v1/update")
+    public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam) {
+        shortLinkService.updateShortLink(requestParam);
+        return Results.success();
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.kill4us.shortlink.admin.remote.dto.req;
+package com.kill4us.shortlink.project.dto.req;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -6,20 +6,10 @@ import lombok.Data;
 import java.util.Date;
 
 /**
- * 短链接创建请求对象
+ * 短链接修改请求对象
  */
 @Data
-public class ShortLinkCreateReqDTO {
-
-    /**
-     * 协议
-     */
-    private String domainProtocol;
-
-    /**
-     * 域名
-     */
-    private String domain;
+public class ShortLinkUpdateReqDTO {
 
     /**
      * 原始链接
@@ -27,14 +17,14 @@ public class ShortLinkCreateReqDTO {
     private String originUrl;
 
     /**
+     * 完整短链接
+     */
+    private String fullShortUrl;
+
+    /**
      * 分组标识
      */
     private String gid;
-
-    /**
-     * 创建类型 0：控制台 1：接口
-     */
-    private Integer createdType;
 
     /**
      * 有效期类型 0：永久有效 1：用户自定义
@@ -51,4 +41,5 @@ public class ShortLinkCreateReqDTO {
      * 描述
      */
     private String describe;
+
 }
