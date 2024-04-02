@@ -14,6 +14,7 @@ import com.kill4us.shortlink.admin.dto.req.UserRegisterReqDTO;
 import com.kill4us.shortlink.admin.dto.req.UserUpdateReqDTO;
 import com.kill4us.shortlink.admin.dto.resp.UserLoginRespDTO;
 import com.kill4us.shortlink.admin.dto.resp.UserRespDTO;
+import com.kill4us.shortlink.admin.service.GroupService;
 import com.kill4us.shortlink.admin.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.User;
@@ -43,7 +44,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;  //  注入布隆过滤器
     private final RedissonClient redissonClient;
     private final StringRedisTemplate stringRedisTemplate;
+    private final GroupService groupService;
 
+    /**
+     * 根据用户名查询用户
+     * @param username 用户名
+     * @return
+     */
     @Override
     public UserRespDTO getUserByUsername(String username) {
         LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class)
@@ -62,6 +69,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         return !userRegisterCachePenetrationBloomFilter.contains(username);
     }
 
+    /**
+     * 用户注册
+     * @param requestParam 注册用户请求参数
+     */
     @Override
     public void register(UserRegisterReqDTO requestParam) {
         if (!hasUsername(requestParam.getUsername())) {
@@ -75,6 +86,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
                     throw new ClientException(USER_SAVE_ERROR);
                 }
                 userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
+                groupService.saveGroup("默认分组");
                 return;
             }
             throw new ClientException(USER_NAME_EXISTS);
