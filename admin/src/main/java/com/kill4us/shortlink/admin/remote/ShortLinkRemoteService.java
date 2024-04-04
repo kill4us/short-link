@@ -10,6 +10,7 @@ import com.kill4us.shortlink.admin.remote.dto.req.ShortLinkPageReqDTO;
 import com.kill4us.shortlink.admin.remote.dto.resp.ShortLinkCountQueryRespDTO;
 import com.kill4us.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.kill4us.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +57,17 @@ public interface ShortLinkRemoteService {
         requestMap.put("requestParam", requestParam);
         String resultPage = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/count", requestMap);
         return JSON.parseObject(resultPage, new TypeReference<>() {
+        });
+    }
+
+    /**
+     * 根据url获取网站标题
+     * @param url
+     * @return
+     */
+    default String getTitleByUrl(@RequestParam("url") String url) {
+        String responseStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/title?url=" + url);
+        return JSON.parseObject(responseStr, new TypeReference<>() {
         });
     }
 }
