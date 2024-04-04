@@ -24,6 +24,7 @@ import com.kill4us.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.kill4us.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import com.kill4us.shortlink.project.service.ShortLinkService;
 import com.kill4us.shortlink.project.utils.HashUtil;
+import com.kill4us.shortlink.project.utils.LinkUtil;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServlet;
@@ -44,6 +45,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static com.kill4us.shortlink.project.common.constant.RedisKeyConstant.*;
+import static com.kill4us.shortlink.project.common.constant.ShortLinkConstant.DEFAULT_CACHE_VALID_TIME;
 
 /**
  * 短链接接口实现层
@@ -83,6 +85,15 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             log.warn("短链接 {} 重复入库", fullShortUrl);
             throw new ServiceException("短链接重复生成，请重试");
         }
+        /**
+         * 缓存预热
+         */
+        stringRedisTemplate.opsForValue()
+                .set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl),
+                        requestParam.getOriginUrl(),
+                        LinkUtil.getLinkCacheValidDate(requestParam.getValidDate()),
+                        TimeUnit.MICROSECONDS
+                );
         shortLinkCreateCachePenetrationBloomFilter.add(fullShortUrl);
         return ShortLinkCreateRespDTO.builder()
                 .fullShortUrl("http://" + shortLinkDO.getFullShortUrl())
