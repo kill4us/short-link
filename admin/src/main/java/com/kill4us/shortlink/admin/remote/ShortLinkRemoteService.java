@@ -10,6 +10,7 @@ import com.kill4us.shortlink.admin.common.convention.result.Result;
 import com.kill4us.shortlink.admin.remote.dto.req.RecycleBinSaveReqDTO;
 import com.kill4us.shortlink.admin.remote.dto.req.ShortLinkCreateReqDTO;
 import com.kill4us.shortlink.admin.remote.dto.req.ShortLinkPageReqDTO;
+import com.kill4us.shortlink.admin.remote.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.kill4us.shortlink.admin.remote.dto.resp.ShortLinkCountQueryRespDTO;
 import com.kill4us.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.kill4us.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
@@ -85,9 +86,9 @@ public interface ShortLinkRemoteService {
     /**
      * 调用中台查询回收站短链接分页
      */
-    default Result<IPage<ShortLinkPageRespDTO>> pageRecycleBinShortLink(ShortLinkPageReqDTO requestParam) {
+    default Result<IPage<ShortLinkPageRespDTO>> pageRecycleBinShortLink(ShortLinkRecycleBinPageReqDTO requestParam) {
         Map<String, Object> requestMap = new HashMap<>();
-        requestMap.put("gid", requestParam.getGid());
+        requestMap.put("gidList", requestParam.getGidList());
         requestMap.put("current", requestParam.getCurrent());
         requestMap.put("size", requestParam.getSize());
         String resultPage = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/page", requestMap);

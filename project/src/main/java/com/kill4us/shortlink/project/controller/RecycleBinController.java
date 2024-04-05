@@ -5,6 +5,7 @@ import com.kill4us.shortlink.project.common.convention.result.Result;
 import com.kill4us.shortlink.project.common.convention.result.Results;
 import com.kill4us.shortlink.project.dto.req.RecycleBinSaveReqDTO;
 import com.kill4us.shortlink.project.dto.req.ShortLinkPageReqDTO;
+import com.kill4us.shortlink.project.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.kill4us.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import com.kill4us.shortlink.project.service.RecycleBinService;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class RecycleBinController {
      * 分页查询回收站短链接
      */
     @GetMapping("/api/short-link/v1/recycle-bin/page")
-    public Result<IPage<ShortLinkPageRespDTO>> pageRecycleBinShortLink(ShortLinkPageReqDTO requestParam) {
+    public Result<IPage<ShortLinkPageRespDTO>> pageRecycleBinShortLink(ShortLinkRecycleBinPageReqDTO requestParam) {
         return Results.success(recycleBinService.pageRecycleBinShortLink(requestParam));
     }
 }
