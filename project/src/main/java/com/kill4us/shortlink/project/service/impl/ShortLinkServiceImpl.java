@@ -102,7 +102,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 );
         shortLinkCreateCachePenetrationBloomFilter.add(fullShortUrl);
         return ShortLinkCreateRespDTO.builder()
-                .fullShortUrl("http://" + shortLinkDO.getFullShortUrl())
+                .fullShortUrl(shortLinkDO.getFullShortUrl())
                 .originUrl(requestParam.getOriginUrl())
                 .gid(requestParam.getGid())
                 .build();
@@ -202,6 +202,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             ((HttpServletResponse) response).sendRedirect(originLink);
             return;
         }
+        fullShortUrl = "http://" + fullShortUrl;
         boolean contains = shortLinkCreateCachePenetrationBloomFilter.contains(fullShortUrl);
         if (!contains) {
             ((HttpServletResponse) response).sendRedirect("/page/notfound");
@@ -236,23 +237,22 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .eq(ShortLinkDO::getEnableStatus, 0)
                     .eq(ShortLinkDO::getDelFlag, 0);
             ShortLinkDO shortLinkDO = baseMapper.selectOne(queryWrapper);
-            if (shortLinkDO != null) {
-                if (shortLinkDO.getValidDate() != null && shortLinkDO.getValidDate().before(new Date())) {
-                    stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl), "-", 1, TimeUnit.MINUTES);
-                    return;
-                }
-                /**
-                 * 缓存预热
-                 */
-                stringRedisTemplate.opsForValue()
-                        .set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl),
-                                shortLinkDO.getOriginUrl(),
-                                LinkUtil.getLinkCacheValidDate(shortLinkDO.getValidDate()),
-                                TimeUnit.MICROSECONDS
-                        );
-                //  跳转
-                ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
+            if (shortLinkDO == null || shortLinkDO.getValidDate().before(new Date())) {
+                stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl), "-", 1, TimeUnit.MINUTES);
+                ((HttpServletResponse) response).sendRedirect("/page/notfound");
+                return;
             }
+            /**
+             * 缓存预热
+             */
+            stringRedisTemplate.opsForValue()
+                    .set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl),
+                            shortLinkDO.getOriginUrl(),
+                            LinkUtil.getLinkCacheValidDate(shortLinkDO.getValidDate()),
+                            TimeUnit.MICROSECONDS
+                    );
+            //  跳转
+            ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
         } finally {
             lock.unlock();
         }
