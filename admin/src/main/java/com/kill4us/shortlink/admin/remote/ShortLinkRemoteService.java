@@ -7,10 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.kill4us.shortlink.admin.common.convention.result.Result;
-import com.kill4us.shortlink.admin.remote.dto.req.RecycleBinSaveReqDTO;
-import com.kill4us.shortlink.admin.remote.dto.req.ShortLinkCreateReqDTO;
-import com.kill4us.shortlink.admin.remote.dto.req.ShortLinkPageReqDTO;
-import com.kill4us.shortlink.admin.remote.dto.req.ShortLinkRecycleBinPageReqDTO;
+import com.kill4us.shortlink.admin.remote.dto.req.*;
 import com.kill4us.shortlink.admin.remote.dto.resp.ShortLinkCountQueryRespDTO;
 import com.kill4us.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.kill4us.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
@@ -94,5 +91,15 @@ public interface ShortLinkRemoteService {
         String resultPage = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/page", requestMap);
         return JSON.parseObject(resultPage, new TypeReference<>() {
         });
+    }
+
+
+    /**
+     * 恢复短链接
+     * @param requestParam
+     */
+    default void recoverFromCycleBin(RecycleBinRecoverReqDTO requestParam) {
+        HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/recover", JSON.toJSONString(requestParam));
+
     }
 }
