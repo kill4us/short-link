@@ -3,10 +3,7 @@ package com.kill4us.shortlink.project.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.kill4us.shortlink.project.common.convention.result.Result;
 import com.kill4us.shortlink.project.common.convention.result.Results;
-import com.kill4us.shortlink.project.dto.req.RecycleBinRecoverReqDTO;
-import com.kill4us.shortlink.project.dto.req.RecycleBinSaveReqDTO;
-import com.kill4us.shortlink.project.dto.req.ShortLinkPageReqDTO;
-import com.kill4us.shortlink.project.dto.req.ShortLinkRecycleBinPageReqDTO;
+import com.kill4us.shortlink.project.dto.req.*;
 import com.kill4us.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import com.kill4us.shortlink.project.service.RecycleBinService;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +41,12 @@ public class RecycleBinController {
     @PostMapping("/api/short-link/v1/recycle-bin/recover")
     public Result<Void> recoverFromCycleBin(@RequestBody RecycleBinRecoverReqDTO requestParam) {
         recycleBinService.recoverFromCycleBin(requestParam);
+        return Results.success();
+    }
+
+    @PostMapping("/api/short-link/v1/recycle-bin/remove")
+    public Result<Void> removeFromCycleBin(@RequestBody RecycleBinRemoveReqDTO requestParam) {
+        recycleBinService.removeFromCycleBin(requestParam);
         return Results.success();
     }
 }

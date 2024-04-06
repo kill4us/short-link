@@ -9,10 +9,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kill4us.shortlink.project.dao.entity.ShortLinkDO;
 import com.kill4us.shortlink.project.dao.mapper.ShortLinkMapper;
-import com.kill4us.shortlink.project.dto.req.RecycleBinRecoverReqDTO;
-import com.kill4us.shortlink.project.dto.req.RecycleBinSaveReqDTO;
-import com.kill4us.shortlink.project.dto.req.ShortLinkPageReqDTO;
-import com.kill4us.shortlink.project.dto.req.ShortLinkRecycleBinPageReqDTO;
+import com.kill4us.shortlink.project.dto.req.*;
 import com.kill4us.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import com.kill4us.shortlink.project.service.RecycleBinService;
 import com.kill4us.shortlink.project.utils.LinkUtil;
@@ -94,5 +91,18 @@ public class RecycleBInServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
         stringRedisTemplate.delete(
                 String.format(GOTO_IS_NULL_SHORT_LINK_KEY, requestParam.getFullShortUrl())
         );
+    }
+
+    /**
+     * 从回收站彻底删除短链接实现
+     */
+    @Override
+    public void removeFromCycleBin(RecycleBinRemoveReqDTO requestParam) {
+        LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
+                .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
+                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .eq(ShortLinkDO::getEnableStatus, 1)
+                .eq(ShortLinkDO::getDelFlag, 0);
+        baseMapper.delete(updateWrapper);
     }
 }
