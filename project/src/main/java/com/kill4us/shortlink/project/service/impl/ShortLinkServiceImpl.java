@@ -15,14 +15,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kill4us.shortlink.project.common.convention.exception.ServiceException;
-import com.kill4us.shortlink.project.dao.entity.LinkLocalStatsDO;
-import com.kill4us.shortlink.project.dao.entity.ShortLinkDO;
-import com.kill4us.shortlink.project.dao.entity.ShortLinkGotoDO;
-import com.kill4us.shortlink.project.dao.entity.LinkAccessStatsDO;
-import com.kill4us.shortlink.project.dao.mapper.LinkLocalStatsMapper;
-import com.kill4us.shortlink.project.dao.mapper.ShortLinkGotoMapper;
-import com.kill4us.shortlink.project.dao.mapper.ShortLinkMapper;
-import com.kill4us.shortlink.project.dao.mapper.LinkAccessStatsMapper;
+import com.kill4us.shortlink.project.dao.entity.*;
+import com.kill4us.shortlink.project.dao.mapper.*;
 import com.kill4us.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.kill4us.shortlink.project.dto.req.ShortLinkPageReqDTO;
 import com.kill4us.shortlink.project.dto.req.ShortLinkUpdateReqDTO;
@@ -74,6 +68,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final RedissonClient redissonClient;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
     private final LinkLocalStatsMapper linkLocalStatsMapper;
+    private final LinkOSStatsMapper linkOSStatsMapper;
 
     @Value("${short-link.stats.APAM-KEY}")
     private String apamKey;
@@ -286,6 +281,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
      * @param response
      */
     private void shortLinkStats(String fullShortUrl, String gid, ServletRequest request, ServletResponse response) {
+        /**
+         * PV, UV, UIP监控
+         */
         AtomicBoolean uvFirstFlag = new AtomicBoolean();
         Cookie[] cookies = ((HttpServletRequest) request).getCookies();
         try {
@@ -314,8 +312,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             String remoteAddr = LinkUtil.getActualIp((HttpServletRequest) request);
             Long uipAdded = stringRedisTemplate.opsForSet().add("short-link:stats:uip:" + fullShortUrl, remoteAddr);
             boolean uipFirstFlag = uipAdded != null && uipAdded > 0L;
-
-
             if (StrUtil.isBlank(gid)) {
                 LambdaQueryWrapper<ShortLinkGotoDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
                         .eq(ShortLinkGotoDO::getFullShortUrl, fullShortUrl);
@@ -336,6 +332,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .date(new Date())
                     .build();
             linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
+            /**
+             * 获取IP定位
+             */
             Map<String, Object> requestLocaleMap = new HashMap<>();
             requestLocaleMap.put("key", apamKey);
             requestLocaleMap.put("ip", remoteAddr);
@@ -360,6 +359,18 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .build();
                 linkLocalStatsMapper.shortLinkLocalState(linkLocalStatsDO);
             }
+
+            /**
+             * 操作系统监控
+             */
+            LinkOSStatsDO linkOSStatsDO = LinkOSStatsDO.builder()
+                    .fullShortUrl(fullShortUrl)
+                    .gid(gid)
+                    .date(new Date())
+                    .cnt(1)
+                    .os(LinkUtil.getUserOS((HttpServletRequest) request))
+                    .build();
+            linkOSStatsMapper.shortLinkOSState(linkOSStatsDO);
         } catch (Throwable ex) {
             log.error("短链接访问量统计异常", ex);
         }
