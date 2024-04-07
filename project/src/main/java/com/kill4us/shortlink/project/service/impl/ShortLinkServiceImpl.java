@@ -6,15 +6,20 @@ import cn.hutool.core.date.Week;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kill4us.shortlink.project.common.convention.exception.ServiceException;
+import com.kill4us.shortlink.project.dao.entity.LinkLocalStatsDO;
 import com.kill4us.shortlink.project.dao.entity.ShortLinkDO;
 import com.kill4us.shortlink.project.dao.entity.ShortLinkGotoDO;
 import com.kill4us.shortlink.project.dao.entity.LinkAccessStatsDO;
+import com.kill4us.shortlink.project.dao.mapper.LinkLocalStatsMapper;
 import com.kill4us.shortlink.project.dao.mapper.ShortLinkGotoMapper;
 import com.kill4us.shortlink.project.dao.mapper.ShortLinkMapper;
 import com.kill4us.shortlink.project.dao.mapper.LinkAccessStatsMapper;
@@ -41,6 +46,7 @@ import org.jsoup.nodes.Element;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -52,6 +58,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.kill4us.shortlink.project.common.constant.RedisKeyConstant.*;
+import static com.kill4us.shortlink.project.common.constant.ShortLinkConstant.APAM_URL;
 
 /**
  * 短链接接口实现层
@@ -66,6 +73,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
+    private final LinkLocalStatsMapper linkLocalStatsMapper;
+
+    @Value("${short-link.stats.APAM-KEY}")
+    private String apamKey;
 
     /**
      * 短链接创建
@@ -266,6 +277,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
     }
 
+    /**
+     * 短链接数据监控
+     *
+     * @param fullShortUrl
+     * @param gid
+     * @param request
+     * @param response
+     */
     private void shortLinkStats(String fullShortUrl, String gid, ServletRequest request, ServletResponse response) {
         AtomicBoolean uvFirstFlag = new AtomicBoolean();
         Cookie[] cookies = ((HttpServletRequest) request).getCookies();
@@ -317,6 +336,30 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .date(new Date())
                     .build();
             linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
+            Map<String, Object> requestLocaleMap = new HashMap<>();
+            requestLocaleMap.put("key", apamKey);
+            requestLocaleMap.put("ip", remoteAddr);
+            String localeResult = HttpUtil.get(APAM_URL, requestLocaleMap);
+            JSONObject localeResultObj = JSON.parseObject(localeResult);
+            String infocode = localeResultObj.getString("infocode");
+            if (StrUtil.isNotBlank(infocode) && Objects.equals(infocode, "10000")) {
+                String province = localeResultObj.getString("province");
+                String city = localeResultObj.getString("city");
+                String country = localeResultObj.getString("country");
+                String adcode = localeResultObj.getString("adcode");
+                boolean unknownFlag = StrUtil.equals(province, "[]");
+                LinkLocalStatsDO linkLocalStatsDO = LinkLocalStatsDO.builder()
+                        .fullShortUrl(fullShortUrl)
+                        .province(unknownFlag ? "未知" : province)
+                        .country(unknownFlag ? "未知" : country)
+                        .city(unknownFlag ? "未知" : city)
+                        .adcode(unknownFlag ? "未知" : adcode)
+                        .cnt(1)
+                        .date(new Date())
+                        .gid(gid)
+                        .build();
+                linkLocalStatsMapper.shortLinkLocalState(linkLocalStatsDO);
+            }
         } catch (Throwable ex) {
             log.error("短链接访问量统计异常", ex);
         }
