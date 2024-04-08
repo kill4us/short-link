@@ -71,7 +71,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkLocalStatsMapper linkLocalStatsMapper;
     private final LinkOSStatsMapper linkOSStatsMapper;
     private final LinkBrowserStatsMapper linkBrowserStatsMapper;
-    private final TLinkAccessLogsMapper linkAccessLogsMapper;
+    private final LinkAccessLogsMapper linkAccessLogsMapper;
+    private final LinkDeviceStatsMapper linkDeviceStatsMapper;
+    private final LinkNetworkStatsMapper linkNetworkStatsMapper;
 
     @Value("${short-link.stats.APAM-KEY}")
     private String apamKey;
@@ -391,7 +393,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .build();
             linkBrowserStatsMapper.shortLinkBrowserState(linkBrowserStatsDO);
 
-            TLinkAccessLogsDO tLinkAccessLogsDO = TLinkAccessLogsDO.builder()
+            LinkAccessLogsDO tLinkAccessLogsDO = LinkAccessLogsDO.builder()
                     .ip(remoteAddr)
                     .os(LinkUtil.getUserOS((HttpServletRequest) request))
                     .browser(LinkUtil.getBrowser(((HttpServletRequest) request)))
@@ -400,6 +402,24 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .user(uv.get())
                     .build();
             linkAccessLogsMapper.insert(tLinkAccessLogsDO);
+
+            LinkDeviceStatsDO linkDeviceStatsDO = LinkDeviceStatsDO.builder()
+                    .device(LinkUtil.getDevice(((HttpServletRequest) request)))
+                    .cnt(1)
+                    .gid(gid)
+                    .fullShortUrl(fullShortUrl)
+                    .date(new Date())
+                    .build();
+            linkDeviceStatsMapper.shortLinkDeviceState(linkDeviceStatsDO);
+
+            LinkNetworkStatsDO linkNetworkStatsDO = LinkNetworkStatsDO.builder()
+                    .network(LinkUtil.getNetwork(((HttpServletRequest) request)))
+                    .cnt(1)
+                    .gid(gid)
+                    .fullShortUrl(fullShortUrl)
+                    .date(new Date())
+                    .build();
+            linkNetworkStatsMapper.shortLinkNetworkState(linkNetworkStatsDO);
         } catch (Throwable ex) {
             log.error("短链接访问量统计异常", ex);
         }
