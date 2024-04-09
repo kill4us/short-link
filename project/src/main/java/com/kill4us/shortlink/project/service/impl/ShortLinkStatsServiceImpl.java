@@ -1,10 +1,12 @@
 package com.kill4us.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.kill4us.shortlink.project.dao.entity.LinkAccessStatsDO;
-import com.kill4us.shortlink.project.dao.entity.LinkDeviceStatsDO;
-import com.kill4us.shortlink.project.dao.entity.LinkLocalStatsDO;
-import com.kill4us.shortlink.project.dao.entity.LinkNetworkStatsDO;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.CollectionUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.kill4us.shortlink.project.dao.entity.*;
 import com.kill4us.shortlink.project.dao.mapper.LinkAccessLogsMapper;
 import com.kill4us.shortlink.project.dao.mapper.LinkAccessStatsMapper;
 import com.kill4us.shortlink.project.dao.mapper.LinkBrowserStatsMapper;
@@ -12,24 +14,14 @@ import com.kill4us.shortlink.project.dao.mapper.LinkDeviceStatsMapper;
 import com.kill4us.shortlink.project.dao.mapper.LinkLocalStatsMapper;
 import com.kill4us.shortlink.project.dao.mapper.LinkNetworkStatsMapper;
 import com.kill4us.shortlink.project.dao.mapper.LinkOSStatsMapper;
+import com.kill4us.shortlink.project.dto.req.ShortLinkStatsAccessRecordReqDTO;
 import com.kill4us.shortlink.project.dto.req.ShortLinkStatsReqDTO;
-import com.kill4us.shortlink.project.dto.resp.ShortLinkStatsAccessDailyRespDTO;
-import com.kill4us.shortlink.project.dto.resp.ShortLinkStatsBrowserRespDTO;
-import com.kill4us.shortlink.project.dto.resp.ShortLinkStatsDeviceRespDTO;
-import com.kill4us.shortlink.project.dto.resp.ShortLinkStatsLocaleCNRespDTO;
-import com.kill4us.shortlink.project.dto.resp.ShortLinkStatsNetworkRespDTO;
-import com.kill4us.shortlink.project.dto.resp.ShortLinkStatsOsRespDTO;
-import com.kill4us.shortlink.project.dto.resp.ShortLinkStatsRespDTO;
-import com.kill4us.shortlink.project.dto.resp.ShortLinkStatsTopIpRespDTO;
-import com.kill4us.shortlink.project.dto.resp.ShortLinkStatsUvRespDTO;
+import com.kill4us.shortlink.project.dto.resp.*;
 import com.kill4us.shortlink.project.service.ShortLinkStatsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -199,5 +191,41 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
                 .deviceStats(deviceStats)
                 .networkStats(networkStats)
                 .build();
+    }
+
+    @Override
+    public IPage<ShortLinkStatsAccessRecordRespDTO> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
+        LambdaQueryWrapper<LinkAccessLogsDO> queryWrapper = Wrappers.lambdaQuery(LinkAccessLogsDO.class)
+                .eq(LinkAccessLogsDO::getFullShortUrl, requestParam.getFullShortUrl())
+                .eq(LinkAccessLogsDO::getGid, requestParam.getGid())
+                .between(LinkAccessLogsDO::getCreateTime, requestParam.getStartDate(), requestParam.getEndDate())
+                .eq(LinkAccessLogsDO::getDelFlag, 0)
+                .orderByDesc(LinkAccessLogsDO::getCreateTime);
+        IPage<LinkAccessLogsDO> resultAccessLogPage = linkAccessLogsMapper.selectPage(requestParam, queryWrapper);
+        IPage<ShortLinkStatsAccessRecordRespDTO> actualResult = resultAccessLogPage.convert(each -> BeanUtil.toBean(each, ShortLinkStatsAccessRecordRespDTO.class));
+        List<String> userAccessLogsList = actualResult.getRecords()
+                .stream()
+                .map(ShortLinkStatsAccessRecordRespDTO::getUser)
+                .toList();
+        if (CollectionUtil.isEmpty(userAccessLogsList)) {
+            return actualResult;
+        }
+        List<Map<String, Object>> uvTypeList = linkAccessLogsMapper.selectUvTypeByUsers(
+                requestParam.getGid(),
+                requestParam.getFullShortUrl(),
+                requestParam.getStartDate(),
+                requestParam.getEndDate(),
+                userAccessLogsList);
+        actualResult.getRecords().forEach(each -> {
+                    String uvType = uvTypeList.stream()
+                            .filter(item -> Objects.equals(each.getUser(), item.get("user")))
+                            .findFirst()
+                            .map(item -> item.get("user"))
+                            .map(Object::toString)
+                            .orElse("旧访客");
+                    each.setUvType(uvType);
+                }
+        );
+        return actualResult;
     }
 }
