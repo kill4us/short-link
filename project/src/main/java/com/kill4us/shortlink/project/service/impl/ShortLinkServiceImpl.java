@@ -1,5 +1,6 @@
 package com.kill4us.shortlink.project.service.impl;
 
+import cn.hutool.core.annotation.Link;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.Week;
@@ -350,17 +351,17 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             String localeResult = HttpUtil.get(APAM_URL, requestLocaleMap);
             JSONObject localeResultObj = JSON.parseObject(localeResult);
             String infocode = localeResultObj.getString("infocode");
+            String actualProvince = localeResultObj.getString("province");
+            String actualCity = localeResultObj.getString("city");
             if (StrUtil.isNotBlank(infocode) && Objects.equals(infocode, "10000")) {
                 String province = localeResultObj.getString("province");
-                String city = localeResultObj.getString("city");
-                String country = localeResultObj.getString("country");
                 String adcode = localeResultObj.getString("adcode");
                 boolean unknownFlag = StrUtil.equals(province, "[]");
                 LinkLocalStatsDO linkLocalStatsDO = LinkLocalStatsDO.builder()
                         .fullShortUrl(fullShortUrl)
                         .province(unknownFlag ? "未知" : province)
-                        .country(unknownFlag ? "未知" : country)
-                        .city(unknownFlag ? "未知" : city)
+                        .country("中国")
+                        .city(unknownFlag ? "未知" : localeResultObj.getString("city"))
                         .adcode(unknownFlag ? "未知" : adcode)
                         .cnt(1)
                         .date(new Date())
@@ -393,12 +394,20 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .build();
             linkBrowserStatsMapper.shortLinkBrowserState(linkBrowserStatsDO);
 
+            boolean unknownlocal = StrUtil.equals(actualProvince, "[]");
+            if (unknownlocal) {
+                actualProvince = "未知";
+                actualCity = "未知";
+            }
             LinkAccessLogsDO tLinkAccessLogsDO = LinkAccessLogsDO.builder()
                     .ip(remoteAddr)
                     .os(LinkUtil.getUserOS((HttpServletRequest) request))
                     .browser(LinkUtil.getBrowser(((HttpServletRequest) request)))
                     .fullShortUrl(fullShortUrl)
                     .gid(gid)
+                    .network(LinkUtil.getNetwork(((HttpServletRequest) request)))
+                    .locale("中国-" + actualProvince + "-" + actualCity)
+                    .device(LinkUtil.getDevice((HttpServletRequest) request))
                     .user(uv.get())
                     .build();
             linkAccessLogsMapper.insert(tLinkAccessLogsDO);
