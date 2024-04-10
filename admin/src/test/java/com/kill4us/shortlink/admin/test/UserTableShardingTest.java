@@ -13,7 +13,7 @@ public class UserTableShardingTest {
             "  `update_time` datetime DEFAULT NULL COMMENT '修改时间',\n" +
             "  `del_flag` tinyint(1) DEFAULT NULL COMMENT '删除标识 0：未删除 1：已删除',\n" +
             "  PRIMARY KEY (`id`),\n" +
-            "  UNIQUE KEY `idx_unique_full-short-url` (`full_short_url`) USING BTREE\n" +
+            "  UNIQUE KEY `idx_unique_today_stats` (`full_short_url`, `gid`, `date`) USING BTREE\n" +
             ") ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;;";
 
     public static void main(String[] args) {
