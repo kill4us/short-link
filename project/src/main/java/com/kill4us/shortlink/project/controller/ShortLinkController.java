@@ -43,6 +43,9 @@ public class ShortLinkController {
         return Results.success(shortLinkService.createShortLink(requestParam));
     }
 
+    /**
+     * 修改短链接
+     */
     @PutMapping("/api/short-link/v1/update")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam) {
         shortLinkService.updateShortLink(requestParam);
@@ -51,9 +54,6 @@ public class ShortLinkController {
 
     /**
      * 分页查询短链接
-     *
-     * @param requestParam
-     * @return
      */
     @GetMapping("/api/short-link/v1/page")
     public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam) {

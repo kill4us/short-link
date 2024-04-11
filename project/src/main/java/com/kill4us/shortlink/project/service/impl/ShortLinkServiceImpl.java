@@ -12,10 +12,13 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.kill4us.shortlink.project.common.convention.exception.ClientException;
 import com.kill4us.shortlink.project.common.convention.exception.ServiceException;
+import com.kill4us.shortlink.project.common.enums.ValidDateTypeEnum;
 import com.kill4us.shortlink.project.dao.entity.*;
 import com.kill4us.shortlink.project.dao.mapper.*;
 import com.kill4us.shortlink.project.dto.req.ShortLinkBatchCreateReqDTO;
@@ -208,7 +211,53 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
      */
     @Override
     public void updateShortLink(ShortLinkUpdateReqDTO requestParam) {
-        //  Todo 待实现
+        LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
+                .eq(ShortLinkDO::getDelFlag, 0)
+                .eq(ShortLinkDO::getEnableStatus, 0);
+        ShortLinkDO hasShortLinkDO = baseMapper.selectOne(queryWrapper);
+        if (hasShortLinkDO == null) {
+            throw new ClientException("短链接记录不存在");
+        }
+        ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                .domain(hasShortLinkDO.getDomain())
+                .shortUri(hasShortLinkDO.getShortUri())
+                .clickNum(hasShortLinkDO.getClickNum())
+                .favicon(hasShortLinkDO.getFavicon())
+                .createdType(hasShortLinkDO.getCreatedType())
+                .gid(requestParam.getGid())
+                .originUrl(requestParam.getOriginUrl())
+                .describe(requestParam.getDescribe())
+                .validDateType(requestParam.getValidDateType())
+                .validDate(requestParam.getValidDate())
+                .build();
+        if (Objects.equals(hasShortLinkDO.getGid(), requestParam.getGid())) {
+            LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
+                    .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
+                    .eq(ShortLinkDO::getGid, requestParam.getGid())
+                    .eq(ShortLinkDO::getDelFlag, 0)
+                    .eq(ShortLinkDO::getEnableStatus, 0)
+                    .set(Objects.equals(requestParam.getValidDateType(), ValidDateTypeEnum.PERMANENT.getType()), ShortLinkDO::getValidDate, null);
+            baseMapper.update(shortLinkDO, updateWrapper);
+        } else {
+            LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
+                    .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
+                    .eq(ShortLinkDO::getGid, hasShortLinkDO.getGid())
+                    .eq(ShortLinkDO::getDelFlag, 0)
+                    .eq(ShortLinkDO::getEnableStatus, 0);
+            baseMapper.delete(updateWrapper);
+            baseMapper.insert(shortLinkDO);
+        }
+        if (!Objects.equals(hasShortLinkDO.getValidDateType(), requestParam.getValidDateType())
+                || !Objects.equals(hasShortLinkDO.getValidDate(), requestParam.getValidDate())) {
+            stringRedisTemplate.delete(String.format(GOTO_SHORT_LINK_KEY, requestParam.getFullShortUrl()));
+            if (hasShortLinkDO.getValidDate() != null && hasShortLinkDO.getValidDate().before(new Date())) {
+                if (Objects.equals(requestParam.getValidDateType(), ValidDateTypeEnum.PERMANENT.getType()) || requestParam.getValidDate().after(new Date())) {
+                    stringRedisTemplate.delete(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, requestParam.getFullShortUrl()));
+                }
+            }
+        }
 
     }
 

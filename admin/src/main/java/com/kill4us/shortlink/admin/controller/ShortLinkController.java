@@ -7,6 +7,7 @@ import com.kill4us.shortlink.admin.remote.ShortLinkRemoteService;
 import com.kill4us.shortlink.admin.remote.dto.req.ShortLinkBatchCreateReqDTO;
 import com.kill4us.shortlink.admin.remote.dto.req.ShortLinkCreateReqDTO;
 import com.kill4us.shortlink.admin.remote.dto.req.ShortLinkPageReqDTO;
+import com.kill4us.shortlink.admin.remote.dto.req.ShortLinkUpdateReqDTO;
 import com.kill4us.shortlink.admin.remote.dto.resp.ShortLinkBaseInfoRespDTO;
 import com.kill4us.shortlink.admin.remote.dto.resp.ShortLinkBatchCreateRespDTO;
 import com.kill4us.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
@@ -37,6 +38,15 @@ public class ShortLinkController {
     @GetMapping("/api/short-link/admin/v1/page")
     public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam) {
         return shortLinkRemoteService.pageShortLink(requestParam);
+    }
+
+    /**
+     * 修改短链接
+     */
+    @PostMapping("/api/short-link/admin/v1/update")
+    public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam) {
+        shortLinkRemoteService.updateShortLink(requestParam);
+        return Results.success();
     }
 
     /**
