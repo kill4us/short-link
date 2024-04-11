@@ -121,4 +121,9 @@ public class ShortLinkDO extends baseDO {
     @TableField(exist = false)
     private Integer todayUip;
 
+    /**
+     * 删除时间
+     */
+    private Long delTime;
+
 }
