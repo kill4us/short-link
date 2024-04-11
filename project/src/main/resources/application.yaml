@@ -17,6 +17,8 @@ spring:
       suffix: .html
 
 short-link:
+  domain:
+    default: http://nurl.ink:8001
   stats:
     APAM-KEY: 3d4ef7e0288e7fd6ca307f19fd990c3d
 
