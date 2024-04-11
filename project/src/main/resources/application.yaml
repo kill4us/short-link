@@ -22,6 +22,16 @@ short-link:
   stats:
     APAM-KEY: 3d4ef7e0288e7fd6ca307f19fd990c3d
 
+  goto-domain:
+    white-list:
+      enable: true
+      names: '拿个offer,知乎,掘金,博客园'
+      details:
+        - nageoffer.com
+        - zhihu.com
+        - juejin.cn
+        - cnblogs.com
+
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
