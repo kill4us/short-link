@@ -2,6 +2,7 @@ package com.kill4us.shortlink.project.mq.consumer;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.Week;
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSON;
@@ -43,11 +44,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static com.kill4us.shortlink.project.common.constant.RedisKeyConstant.LOCK_GID_UPDATE_KEY;
 import static com.kill4us.shortlink.project.common.constant.ShortLinkConstant.APAM_URL;
@@ -110,6 +107,7 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
         RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, fullShortUrl));
         RLock rLock = readWriteLock.readLock();
         if (!rLock.tryLock()) {
+            statsRecord.setKeys(UUID.fastUUID().toString());
             delayShortLinkStatsProducer.send(statsRecord);
             return;
         }
