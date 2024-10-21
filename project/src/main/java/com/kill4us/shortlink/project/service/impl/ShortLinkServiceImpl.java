@@ -29,7 +29,6 @@ import com.kill4us.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.kill4us.shortlink.project.dto.req.ShortLinkPageReqDTO;
 import com.kill4us.shortlink.project.dto.req.ShortLinkUpdateReqDTO;
 import com.kill4us.shortlink.project.dto.resp.*;
-import com.kill4us.shortlink.project.mq.producer.DelayShortLinkStatsProducer;
 import com.kill4us.shortlink.project.mq.producer.ShortLinkStatsSaveProducer;
 import com.kill4us.shortlink.project.service.LinkStatsTodayService;
 import com.kill4us.shortlink.project.service.ShortLinkService;
@@ -55,7 +54,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
@@ -64,7 +62,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.kill4us.shortlink.project.common.constant.RedisKeyConstant.*;
-import static com.kill4us.shortlink.project.common.constant.ShortLinkConstant.APAM_URL;
 
 /**
  * 短链接接口实现层
@@ -87,7 +84,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
     private final LinkStatsTodayMapper linkStatsTodayMapper;
     private final LinkStatsTodayService linkStatsTodayService;
-    private final DelayShortLinkStatsProducer delayShortLinkStatsProducer;
     private final GotoDomainWhiteListConfiguration gotoDomainWhiteListConfiguration;
     private final ShortLinkStatsSaveProducer shortLinkStatsSaveProducer;
 
@@ -561,7 +557,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
         List<String> details = gotoDomainWhiteListConfiguration.getDetails();
         if (!details.contains(domain)) {
-            throw new ClientException("演示环境为避免恶意攻击，请生成以下网站跳转链接：" + gotoDomainWhiteListConfiguration.getNames());
+            throw new ClientException("避免恶意攻击，请生成以下网站跳转链接：" + gotoDomainWhiteListConfiguration.getNames());
         }
     }
 }

@@ -17,6 +17,7 @@ import com.kill4us.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
 import com.kill4us.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import com.kill4us.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import com.kill4us.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
+import com.kill4us.shortlink.admin.remote.ShortLinkActualRemoteService;
 import com.kill4us.shortlink.admin.remote.ShortLinkRemoteService;
 import com.kill4us.shortlink.admin.remote.dto.resp.ShortLinkCountQueryRespDTO;
 import com.kill4us.shortlink.admin.service.GroupService;
@@ -46,6 +47,7 @@ import static com.kill4us.shortlink.admin.common.constant.RedisCacheConstant.LOC
 @RequiredArgsConstructor
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
 
+    private final ShortLinkActualRemoteService shortLinkActualRemoteService;
     private final RedissonClient redissonClient;
 
     @Value("${short-link.group.max-num}")
@@ -119,7 +121,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                 .eq(GroupDO::getUsername, UserContext.getUsername());
         List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
         Result<List<ShortLinkCountQueryRespDTO>> listResult =
-                shortLinkRemoteService.listGroupShortLinkCount(groupDOList.stream().map(GroupDO::getGid).toList());
+                shortLinkActualRemoteService.listGroupShortLinkCount(groupDOList.stream().map(GroupDO::getGid).toList());
         List<ShortLinkGroupRespDTO> shortLinkGroupRespDTOList = BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
         shortLinkGroupRespDTOList.forEach(each -> {
             Optional<ShortLinkCountQueryRespDTO> first = listResult.getData().stream()

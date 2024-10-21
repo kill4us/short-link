@@ -1,5 +1,6 @@
 package com.kill4us.shortlink.admin.controller;
 
+import com.kill4us.shortlink.admin.remote.ShortLinkActualRemoteService;
 import com.kill4us.shortlink.admin.remote.ShortLinkRemoteService;
 import com.kill4us.shortlink.admin.common.convention.result.Result;
 import com.kill4us.shortlink.admin.common.convention.result.Results;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class URLTitleController {
 
+    private final ShortLinkActualRemoteService shortLinkActualRemoteService;
+
     ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
     };
 
@@ -23,6 +26,6 @@ public class URLTitleController {
      */
     @GetMapping("/api/short-link/admin/v1/title")
     public String getTitleByUrl(@RequestParam("url") String url) {
-        return shortLinkRemoteService.getTitleByUrl(url);
+        return shortLinkActualRemoteService.getTitleByUrl(url);
     }
 }
